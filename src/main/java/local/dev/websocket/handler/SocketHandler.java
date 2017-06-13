@@ -25,35 +25,6 @@ public class SocketHandler extends TextWebSocketHandler implements InitializingB
 		logger.debug("----------------------------------------------------------------");
 		logger.debug("- Created SocketHandler Beans -");
 		logger.debug("----------------------------------------------------------------");
-		
-		this.test();
-	}
-	
-	private void test()
-	{
-		Thread thread = new Thread(){
-			int n=0;
-			
-			@Override
-			public void run()
-			{
-				while(true)
-				{
-					try
-					{
-						sendMessage("send message index " + n++);
-						Thread.sleep(1000);
-					}
-					catch (Exception e) 
-					{
-						e.printStackTrace();
-						break;
-					}
-				}
-			}
-		};
-		
-		thread.start();
 	}
 
 	/* Connection Closed */
@@ -64,10 +35,10 @@ public class SocketHandler extends TextWebSocketHandler implements InitializingB
 		
 		sessionSet.remove(session);
 		
-		logger.debug("------------------------ [INFO] Removed Session ...");
+		logger.debug("------------------------ [INFO] Removed Session Address = {}", session.getRemoteAddress());
 	}
 	
-	/* Connection Establised */
+	/* Client Connection Establised */
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception
 	{
@@ -75,7 +46,7 @@ public class SocketHandler extends TextWebSocketHandler implements InitializingB
 		
 		sessionSet.add(session);
 		
-		logger.debug("------------------------ [INFO] Added Session ...");
+		logger.debug("------------------------ [INFO] Added Session Address = {}", session.getRemoteAddress());
 	}
 	
 	/* Received Message From Connected Client */
@@ -84,27 +55,12 @@ public class SocketHandler extends TextWebSocketHandler implements InitializingB
 	{
 		super.handleMessage(session, message);
 		
-		logger.debug("------------------------ [INFO] Received Message ...");
-	}
-	
-	/* Sending Message Error */
-	@Override
-	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception
-	{
-		super.handleTransportError(session, exception);
+		this.sendMessage((String) message.getPayload());
 		
-		logger.debug("------------------------ [ERROR] Can Not Open Web Socket ...");
+		logger.debug("------------------------ [INFO] Received Address = {}, Message = {}", session.getRemoteAddress(), message.getPayload());
 	}
 	
-	/* Sending Message Error */
-	@Override
-	public boolean supportsPartialMessages()
-	{
-		logger.debug("------------------------ [INFO] Called Method ...");
-		
-		return super.supportsPartialMessages();
-	}
-	
+	/* Send Message to Client Sessions */
 	private String sendMessage(String message)
 	{
 		for(WebSocketSession session : this.sessionSet)
@@ -124,5 +80,23 @@ public class SocketHandler extends TextWebSocketHandler implements InitializingB
 		}
 		
 		return message;
+	}
+	
+	/* Sending Message Error */
+	@Override
+	public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception
+	{
+		super.handleTransportError(session, exception);
+		
+		logger.debug("------------------------ [ERROR] Can Not Open Web Socket ...");
+	}
+	
+	/* Sending Message Error */
+	@Override
+	public boolean supportsPartialMessages()
+	{
+		logger.debug("------------------------ [INFO] Called Method ...");
+		
+		return super.supportsPartialMessages();
 	}
 }

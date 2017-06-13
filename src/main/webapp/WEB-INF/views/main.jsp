@@ -3,62 +3,117 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>Insert title here</title>
+		<title>Message Community</title>
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script type="text/javascript" src="resources/common.js"></script>
 	</head>
 	<body>
 		<script type="text/javascript">
-			var wsUri = "ws://192.168.1.180:8080/websocket/echo.do";
 			
-			function init() 
+			var webSocket = null;
+		
+			$(document).ready(function(e)
 			{
-                output = document.getElementById("output");
-            }
-            function send_message() 
-            {
-            	/* 'Web-Socket Object 생성' 및 'End-Point Binding.' */
-                websocket = new WebSocket(wsUri);
-            	
-                /* 'Web-Socket 최초 연결' */
-                websocket.onopen = function(evt) 
+				getWebSocketEndPoint();
+				registEventHandler();
+			});
+
+			/* 엔터 이벤트 등록. */
+			function registEventHandler()
+			{
+				$("#message").keypress(function(event)
+				{
+					if(event.keyCode == 13)
+					{
+						sendMessage();
+					}
+				});
+			}
+			
+			/* 서버의 웹소켓 엔드포인트 요청 */
+			function getWebSocketEndPoint()
+			{
+				var uri = "/messages/endpoint";
+				var methodType = "get";
+				var param = null;
+				var callback = connectWebSocket;
+				
+				cfn_ajaxRequest(uri, methodType, param, callback);
+			}
+			
+			/* 서버의 웹소켓 연결 요청 */
+			function connectWebSocket(httpResponse)
+			{
+				var endPoint = httpResponse.responseText;
+				
+				makeupWebSocket(endPoint);
+			}
+			
+			function makeupWebSocket(endPoint)
+			{
+				webSocket = new WebSocket(endPoint);
+				
+				/* 'Web-Socket 최초 연결시' */
+                webSocket.onopen = function(evt) 
                 {
-	                writeToScreen("Connected to Endpoint!");
-	                writeToScreen("Message Sent: " + "Hello Web Socket !");
-	                
-	                websocket.send(message);
+	                writeToScreen("Connection Established ...");
                 };
                 
                 /* 'Web-Socket Server 로 부터 메시지 받음' */
-                websocket.onmessage = function(evt) 
+                webSocket.onmessage = function(evt) 
                 {
-	                writeToScreen("Message Received: " + evt.data);
+	                writeToScreen(evt.data);
                 };
                 
                 /* 'Web-Socket Server 와 연결 해제 또는 연결 실패' */
-                websocket.onerror = function(evt) 
+                webSocket.onerror = function(evt) 
                 {
 	                writeToScreen('ERROR: ' + evt.data);
                 };
-            }
-           
-            function writeToScreen(message) 
+			}
+			
+			/* 클라이언트 화면에 메시지 랜더링 */
+			function writeToScreen(message) 
             {
-                var pre = document.createElement("p");
+                var p = document.createElement("p");
                 
-                pre.style.wordWrap = "break-word";
-                pre.innerHTML = message;
+                p.style.wordWrap = "break-word";
+                p.innerHTML = message;
                 
-                output.appendChild(pre);
+                $("#output").prepend(p);
             }
-            
-            window.addEventListener("load", init, false);
+			
+			/* 웹소켓을 사용하여 클라이언트 메시지를 서버로 전달 */
+			function sendMessage()
+			{
+				var userId = $("#userId").val();
+				var message = $("#message").val();
+				
+				var formatedMessage = userId + ": " + message;
+				
+				if(message == "")
+				{
+					return;
+				}
+				
+				webSocket.send(formatedMessage);
+				
+				clearMessage();
+			}
+			
+			function clearMessage()
+			{
+				$("#message").val('');
+			}
 		</script>
 		
-		<h1 style="text-align: center;">Hello World WebSocket Client</h1>
+		<!-- <h1 style="text-align: center;">WebSocket Client</h1> -->
         <br>
         <div style="text-align: center;">
             <form action="">
-                <input onclick="send_message()" value="Send" type="button">
-                <input id="textID" name="message" value="Hello WebSocket!" type="text"><br>
+            	<input id="userId" type="text" placeholder="input your ID" value="unknown">
+                <input id="message" type="text" placeholder="input your messages">
+                <input id="send" type="button" onclick="sendMessage()" value="Send">
             </form>
         </div>
         <div id="output"></div>
