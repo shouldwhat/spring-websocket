@@ -4,11 +4,11 @@
 
 -. spring-websocket 라이브러리를 사용.
 
--. pom.xml에 기술하여, maven build 시 인터넷에서 내려 받도록 설정.
+-. pom.xml에 기술하여, maven build 시 인터넷에서 관련 라이브러리를 내려 받도록 설정.
 
 -. Class 설명
 
-	(1) MessageController.java : 웹소켓에 연결하기 위한 EndPoint를 반환하는 Restful API 게시.
+	(1) MessageController.java : 웹소켓에 연결하기 위한 EndPoint를 반환하는 Restful 웹 API 게시.
 	
 	(2) MessageServiceImpl.java : 연결 가능한 웹소켓 EndPoint 구성.
 	
